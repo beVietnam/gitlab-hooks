@@ -22,7 +22,7 @@ function getMessageOnMergeRequest(body: NowRequestBody) {
   const escapedTitle = escapeContent(object_attributes.title);
 
   return [
-    `Cơ trưởng *${escapedUsername}* muốn bay thử nghiệm [${escapedRepoName}](${repository.url})\n`,
+    `Cơ trưởng *${escapedUsername}* muốn bay thử nghiệm [${escapedRepoName}](${repository.web_url})\n`,
     `\n`,
     `*[\\#${object_attributes.iid} ${escapedTitle}](${object_attributes.url})*\n`,
     `${escapeContent(object_attributes.description)}`,
