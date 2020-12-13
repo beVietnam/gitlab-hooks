@@ -4,7 +4,6 @@ import fetch from "node-fetch";
 const TELEGRAM_API = `https://api.telegram.org/bot${process.env.FOXY_BOT_TOKEN}/sendMessage`;
 
 const GitlabEvents = {
-  Push: "Push Hook",
   Merge: "Merge Request Hook",
   Pipeline: "Pipeline Hook",
 };
@@ -88,6 +87,12 @@ export default async (request: NowRequest, response: NowResponse) => {
   }
 
   const event = request.headers["x-gitlab-event"];
+  const text = getBodyText(event, request.body);
+
+  // Right now doesn’t support others event
+  if (text.length === 0) {
+    response.end();
+  }
 
   const teleResponse = await fetch(TELEGRAM_API, {
     method: "POST",
@@ -98,7 +103,7 @@ export default async (request: NowRequest, response: NowResponse) => {
       chat_id: process.env.USE_GITLAB_CHAT_ID,
       parse_mode: "MarkdownV2",
       disable_web_page_preview: true,
-      text: getBodyText(event, request.body),
+      text,
     }),
   });
 
