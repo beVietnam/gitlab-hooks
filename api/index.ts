@@ -9,41 +9,87 @@ const GitlabEvents = {
   Pipeline: "Pipeline Hook",
 };
 
+function escapeContent(content: string) {
+  const regex = /\_|\*|\[|\]|\(|\)|\~|\`|\>|\#|\+|\-|\=|\{|\}|\.|\!|\|/g;
+  return content.replace(regex, `\\$&`);
+}
+
 function getMessageOnMergeRequest(body: NowRequestBody) {
   const { user, repository, object_attributes } = body;
-  return `
-    [${repository.name}](${repository.url}) Merge Request opened by ${user.username}
-    \n
-    *[#${object_attributes.iid} ${object_attributes.title}](${object_attributes.url})*
-    \n
-    \`\`\`
-    ${object_attributes.description}
-    \`\`\`
-  `;
+
+  const escapedRepoName = escapeContent(repository.name);
+  const escapedUsername = escapeContent(user.name);
+  const escapedTitle = escapeContent(object_attributes.title);
+
+  return [
+    `Cơ trưởng *${escapedUsername}* muốn bay thử nghiệm [${escapedRepoName}](${repository.url})\n`,
+    `\n`,
+    `*[\\#${object_attributes.iid} ${escapedTitle}](${object_attributes.url})*\n`,
+    `${escapeContent(object_attributes.description)}`,
+  ].join("");
+}
+
+function getMessageOnPipeline(body: NowRequestBody) {
+  const { object_attributes, project, user } = body;
+
+  const projectName = escapeContent(project.name);
+  const pipelineId = object_attributes.id;
+  const pipelineUrl = `[\\#${pipelineId}](${project.web_url}/pipelines/${pipelineId})`;
+  const escapedUsername = escapeContent(user.name);
+
+  switch (object_attributes.status) {
+    case "success":
+      return [
+        `🛬 Chuyến bay ${pipelineUrl} hạ cánh thành công\n`,
+        `\\- Tổng thời gian bay ${object_attributes.duration}s\n`,
+      ].join("");
+
+    case "failed":
+      return [
+        `💥 Chuyến bay ${pipelineUrl} mất tín hiệu\n`,
+        `\\- Tổng thời gian bay ${object_attributes.duration}s\n`,
+      ].join("");
+
+    default:
+      return [
+        `🛫 Khởi hành chuyến bay ${pipelineUrl}\n`,
+        `\\- Tổ bay *${projectName}*\n`,
+        `\\- Chặng bay *${object_attributes.ref}*\n`,
+        `\\- Cơ trưởng *${escapedUsername}*\n`,
+      ].join("");
+  }
+}
+
+function getBodyText(event: string | string[], body: NowRequestBody) {
+  switch (event) {
+    case GitlabEvents.Merge:
+      return getMessageOnMergeRequest(body);
+    case GitlabEvents.Pipeline:
+      return getMessageOnPipeline(body);
+    default:
+      return ``;
+  }
 }
 
 export default async (request: NowRequest, response: NowResponse) => {
   // If you specify a secret token, it is sent with the hook request in the X-Gitlab-Token HTTP header.
   // Your webhook endpoint can check that to verify that the request is legitimate.
 
-  // TODO: Check if secret token is matched
+  if (process.env.USE_GITLAB_TOKEN) {
+    const token = request.headers["x-gitlab-token"];
+
+    if (token !== process.env.USE_GITLAB_TOKEN) {
+      response.status(401).json({
+        message: "Unauthorized Gitlab Token",
+      });
+
+      return;
+    }
+  }
 
   const event = request.headers["x-gitlab-event"];
 
-  let text = ``;
-
-  switch (event) {
-    case GitlabEvents.Merge:
-      text = getMessageOnMergeRequest(request.body);
-      break;
-    case GitlabEvents.Pipeline:
-      text = ``;
-      break;
-    default:
-      break;
-  }
-
-  await fetch(TELEGRAM_API, {
+  const teleResponse = await fetch(TELEGRAM_API, {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -51,12 +97,15 @@ export default async (request: NowRequest, response: NowResponse) => {
     body: JSON.stringify({
       chat_id: process.env.USE_GITLAB_CHAT_ID,
       parse_mode: "MarkdownV2",
-      text,
+      disable_web_page_preview: true,
+      text: getBodyText(event, request.body),
     }),
   });
+
+  const data = await teleResponse.json();
 
   // When GitLab sends a webhook, it expects a response in 10 seconds by default.
   // If it does not receive one, it retries the webhook.
   // If the endpoint doesn’t send its HTTP response within those 10 seconds, GitLab may decide the hook failed and retry it.
-  response.end();
+  response.status(teleResponse.status).json(data);
 };
