@@ -14,16 +14,16 @@ function escapeContent(content: string) {
 }
 
 function getMessageOnMergeRequest(body: NowRequestBody) {
-  const { user, repository, object_attributes } = body;
+  const { user, project, object_attributes } = body;
 
-  const escapedRepoName = escapeContent(repository.name);
-  const escapedUsername = escapeContent(user.name);
-  const escapedTitle = escapeContent(object_attributes.title);
+  const projectName = escapeContent(project.name);
+  const username = escapeContent(user.name);
+  const title = escapeContent(object_attributes.title);
 
   return [
-    `Cơ trưởng *${escapedUsername}* muốn bay thử nghiệm [${escapedRepoName}](${repository.web_url})\n`,
+    `Cơ trưởng *${username}* muốn bay thử nghiệm [${projectName}](${project.web_url})\n`,
     `\n`,
-    `*[\\#${object_attributes.iid} ${escapedTitle}](${object_attributes.url})*\n`,
+    `*[\\#${object_attributes.iid} ${title}](${object_attributes.url})*\n`,
     `${escapeContent(object_attributes.description)}`,
   ].join("");
 }
@@ -92,6 +92,7 @@ export default async (request: NowRequest, response: NowResponse) => {
   // Right now doesn’t support others event
   if (text.length === 0) {
     response.end();
+    return;
   }
 
   const teleResponse = await fetch(TELEGRAM_API, {
