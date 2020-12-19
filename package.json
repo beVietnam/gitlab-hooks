@@ -7,7 +7,7 @@
     "@vercel/node": "^1.8.5"
   },
   "engines": {
-    "node": "14.x"
+    "node": "12.x"
   },
   "dependencies": {
     "node-fetch": "^2.6.1"

@@ -108,7 +108,7 @@ function getBodyText(event: string | string[], body: NowRequestBody) {
 }
 
 export default async (request: NowRequest, response: NowResponse) => {
-  if (!request.query?.chat_id) {
+  if (!request.query || !request.query.chat_id) {
     return response.status(400).json({
       message: "Missing Telegram channel identity",
     });
