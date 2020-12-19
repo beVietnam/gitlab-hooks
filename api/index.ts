@@ -14,10 +14,10 @@ function secondsToMinutes(seconds: number) {
   let duration = seconds;
   duration = duration % 3600;
 
-  let min = duration / 60;
+  let min = Math.floor(duration / 60);
   duration = duration % 60;
 
-  let sec = duration;
+  let sec = Math.floor(duration);
 
   if (min === 0) {
     return `${sec}s`;
@@ -129,6 +129,8 @@ export default async (request: NowRequest, response: NowResponse) => {
   const event = request.headers["x-gitlab-event"];
 
   const text = getBodyText(event, request.body);
+
+  console.log({ text });
 
   // Right now doesn’t support others event
   if (text.length === 0) {
