@@ -109,11 +109,12 @@ function getBodyText(event: string | string[], body: NowRequestBody) {
 
 export default async (request: NowRequest, response: NowResponse) => {
   if (!request.query?.chat_id) {
-    response.status(400).json({
+    return response.status(400).json({
       message: "Missing Telegram channel identity",
     });
-    return;
   }
+
+  console.log("Has chat_id");
 
   // If you specify a secret token, it is sent with the hook request in the X-Gitlab-Token HTTP header.
   // Your webhook endpoint can check that to verify that the request is legitimate.
@@ -121,11 +122,9 @@ export default async (request: NowRequest, response: NowResponse) => {
     const token = request.headers["x-gitlab-token"];
 
     if (token !== process.env.GITLAB_SECRET_TOKEN) {
-      response.status(401).json({
+      return response.status(401).json({
         message: "Unauthorized Gitlab Token",
       });
-
-      return;
     }
   }
 
@@ -135,11 +134,12 @@ export default async (request: NowRequest, response: NowResponse) => {
 
   // Right now doesn’t support others event
   if (text.length === 0) {
-    response.status(200).json({
+    return response.status(200).json({
       message: "Unsupported event",
     });
-    return;
   }
+
+  console.log("Has text");
 
   const teleResponse = await fetch(TELEGRAM_API, {
     method: "POST",
@@ -156,8 +156,10 @@ export default async (request: NowRequest, response: NowResponse) => {
 
   const data = await teleResponse.json();
 
+  console.log("Has data");
+
   // When GitLab sends a webhook, it expects a response in 10 seconds by default.
   // If it does not receive one, it retries the webhook.
   // If the endpoint doesn’t send its HTTP response within those 10 seconds, GitLab may decide the hook failed and retry it.
-  response.status(teleResponse.status).json(data);
+  return response.status(teleResponse.status).json(data);
 };
