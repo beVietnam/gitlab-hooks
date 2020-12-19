@@ -1,7 +1,7 @@
 import { NowRequest, NowRequestBody, NowResponse } from "@vercel/node";
 import fetch from "node-fetch";
 
-const TELEGRAM_API = `https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`;
+const TELEGRAM_API = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
 
 const GitlabEvents = {
   Merge: "Merge Request Hook",
@@ -27,7 +27,7 @@ function secondsToMinutes(seconds: number) {
 }
 
 function escapeContent(content: string) {
-  const regex = /_|\*|[|]|(|)|~|`|>|#|\+|-|=|{|}|.|!|\|/g;
+  const regex = /\_|\*|\[|\]|\(|\)|\~|\`|\>|\#|\+|\-|\=|\{|\}|\.|\!|\|/g;
   return content.replace(regex, `\\$&`);
 }
 
@@ -38,7 +38,7 @@ function getMessageOnMergeRequest(body: NowRequestBody) {
   const username = escapeContent(user.name);
   const title = escapeContent(object_attributes.title);
 
-  switch (object_attributes.state) {
+  switch (object_attributes.action) {
     case "merge":
       return `🆒 [\\#${object_attributes.iid} ${projectName}](${project.web_url}) merged by *${username}*\n`;
     case "approved":
@@ -130,6 +130,7 @@ export default async (request: NowRequest, response: NowResponse) => {
   }
 
   const event = request.headers["x-gitlab-event"];
+
   const text = getBodyText(event, request.body);
 
   // Right now doesn’t support others event
