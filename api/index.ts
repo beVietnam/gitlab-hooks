@@ -28,7 +28,7 @@ function secondsToMinutes(seconds: number) {
 
 function escapeContent(content: string) {
   const regex = /\_|\*|\[|\]|\(|\)|\~|\`|\>|\#|\+|\-|\=|\{|\}|\.|\!|\|/g;
-  return content.replace(regex, `\\$&`);
+  return content.replace(regex, `\\\$&`);
 }
 
 function getMessageOnMergeRequest(body: NowRequestBody) {
