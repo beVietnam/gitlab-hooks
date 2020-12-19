@@ -114,8 +114,6 @@ export default async (request: NowRequest, response: NowResponse) => {
     });
   }
 
-  console.log("Has chat_id");
-
   // If you specify a secret token, it is sent with the hook request in the X-Gitlab-Token HTTP header.
   // Your webhook endpoint can check that to verify that the request is legitimate.
   if (process.env.GITLAB_SECRET_TOKEN) {
@@ -139,8 +137,6 @@ export default async (request: NowRequest, response: NowResponse) => {
     });
   }
 
-  console.log("Has text");
-
   const teleResponse = await fetch(TELEGRAM_API, {
     method: "POST",
     headers: {
@@ -155,8 +151,6 @@ export default async (request: NowRequest, response: NowResponse) => {
   });
 
   const data = await teleResponse.json();
-
-  console.log("Has data");
 
   // When GitLab sends a webhook, it expects a response in 10 seconds by default.
   // If it does not receive one, it retries the webhook.
