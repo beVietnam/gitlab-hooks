@@ -107,11 +107,16 @@ function getMessageOnComment(body: NowRequestBody) {
 
   switch (object_attributes.noteable_type) {
     case "MergeRequest":
-      return [
-        `💬 *${username}* comments on [${projectName}](${object_attributes.url})\n`,
-        `\n`,
-        `_${escapeContent(object_attributes.note)}_`,
-      ].join("");
+      // We only want to trigger on Overview comments, not on Changes
+      if (!object_attributes.type) {
+        return [
+          `💬 *${username}* comments on [${projectName}](${object_attributes.url})\n`,
+          `\n`,
+          `_${escapeContent(object_attributes.note)}_`,
+        ].join("");
+      }
+
+      return "";
     case "Snippet":
     case "Issue":
     case "Commit":
