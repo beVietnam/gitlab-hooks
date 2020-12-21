@@ -47,17 +47,19 @@ function getMessageOnMergeRequest(body: NowRequestBody) {
       return `🔃 [\\#${object_attributes.iid} ${projectName}](${project.web_url}) reopened by *${username}*\n`;
     case "update":
       return [
-        `🆙 [\\#${object_attributes.iid} ${projectName}](${project.web_url}) updated by *${username}*\n`,
+        `🆙 [${projectName}](${project.web_url}) updated by *${username}*\n`,
         `\n`,
-        `*[${title}](${object_attributes.url})*\n`,
+        `*[\\#${object_attributes.iid} ${title}](${object_attributes.url})*\n`,
         `\n`,
-        `${escapeContent(object_attributes.description)}`,
+        `Last commit _${escapeContent(object_attributes.last_commit.message)}_`,
+        `\n`,
+        `${escapeContent(object_attributes.description)}\n`,
       ].join("");
     case "open":
       return [
-        `🆕 [\\#${object_attributes.iid} ${projectName}](${project.web_url}) opened by *${username}*\n`,
+        `🆕 [${projectName}](${project.web_url}) opened by *${username}*\n`,
         `\n`,
-        `*[${title}](${object_attributes.url})*\n`,
+        `*[\\#${object_attributes.iid} ${title}](${object_attributes.url})*\n`,
         `\n`,
         `${escapeContent(object_attributes.description)}`,
       ].join("");
