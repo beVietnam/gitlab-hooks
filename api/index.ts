@@ -126,6 +126,8 @@ function getBodyText(event: string | string[], body: NowRequestBody) {
       return getMessageOnMergeRequest(body);
     case GitlabEvents.Pipeline:
       return getMessageOnPipeline(body);
+    case GitlabEvents.Comment:
+      return getMessageOnComment(body);
     default:
       return ``;
   }
