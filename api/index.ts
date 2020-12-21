@@ -6,6 +6,7 @@ const TELEGRAM_API = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOK
 const GitlabEvents = {
   Merge: "Merge Request Hook",
   Pipeline: "Pipeline Hook",
+  Comment: "Note Hook",
 };
 
 function secondsToMinutes(seconds: number) {
@@ -93,6 +94,27 @@ function getMessageOnPipeline(body: NowRequestBody) {
       ].join("");
 
     case "pending":
+    default:
+      return "";
+  }
+}
+
+function getMessageOnComment(body: NowRequestBody) {
+  const { object_attributes, project, user } = body;
+
+  const username = escapeContent(user.name);
+  const projectName = escapeContent(project.name);
+
+  switch (object_attributes.noteable_type) {
+    case "MergeRequest":
+      return [
+        `💬 *${username}* comments on [${projectName}](${object_attributes.url})\n`,
+        `\n`,
+        `_${escapeContent(object_attributes.note)}_`,
+      ].join("");
+    case "Snippet":
+    case "Issue":
+    case "Commit":
     default:
       return "";
   }
