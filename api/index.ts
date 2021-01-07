@@ -20,7 +20,7 @@ function secondsToMinutes(seconds: number) {
 
   let sec = Math.floor(duration);
 
-  if (min === 0) {
+  if (min < 1) {
     return `${sec}s`;
   } else {
     return `${min}m ${sec}s`;
@@ -38,34 +38,33 @@ function getMessageOnMergeRequest(body: NowRequestBody) {
   const projectName = escapeContent(project.name);
   const username = escapeContent(user.name);
   const title = escapeContent(object_attributes.title);
+  const mergeRequestLink = `[\\#${object_attributes.iid} ${projectName}](${object_attributes.url})`;
 
   switch (object_attributes.action) {
     case "merge":
-      return `🆒 [\\#${object_attributes.iid} ${projectName}](${project.web_url}) merged by *${username}*\n`;
+      return `🆒 *${username}* will be the captain for ${mergeRequestLink}\n`;
     case "approved":
-      return `🆗 [\\#${object_attributes.iid} ${projectName}](${project.web_url}) approved by *${username}*\n`;
+      return `🆗 *${username}* agreed the ${mergeRequestLink} upgrade\n`;
     case "reopen":
-      return `🔃 [\\#${object_attributes.iid} ${projectName}](${project.web_url}) reopened by *${username}*\n`;
+      return `🔃 *${username}* want to retry the ${mergeRequestLink} upgrade\n`;
     case "update":
       return [
-        `🆙 [${projectName}](${project.web_url}) updated by *${username}*\n`,
+        `🆙 *${username}* updated the ${mergeRequestLink}\n`,
         `\n`,
-        `*[\\#${object_attributes.iid} ${title}](${object_attributes.url})*\n`,
-        `\n`,
-        `Last commit _${escapeContent(object_attributes.last_commit.message)}_`,
+        `_${escapeContent(object_attributes.last_commit.message)}_`,
         `\n`,
         `${escapeContent(object_attributes.description)}\n`,
       ].join("");
     case "open":
       return [
-        `🆕 [${projectName}](${project.web_url}) opened by *${username}*\n`,
+        `🆕 *${username}* want to upgrade the [${projectName}](${project.web_url}) airplane\n`,
         `\n`,
         `*[\\#${object_attributes.iid} ${title}](${object_attributes.url})*\n`,
         `\n`,
         `${escapeContent(object_attributes.description)}`,
       ].join("");
     case "close":
-      return `🚮 [\\#${object_attributes.iid} ${projectName}](${project.web_url}) closed by *${username}*\n`;
+      return `🚮 *${username}* cancelled the upgrade ${mergeRequestLink}\n`;
     default:
       return "";
   }
@@ -83,14 +82,25 @@ function getMessageOnPipeline(body: NowRequestBody) {
 
   switch (object_attributes.status) {
     case "success":
-      return `🏠 ${pipelineUrl} build completed in ${duration}\n`;
+      return [
+        `🛬 Flight test ${pipelineUrl} landed after ${duration}\n`,
+        `Carrier *${projectName}*\n`,
+        `Captain *${username}*\n`,
+        `Journey *${ref}*\n`,
+      ].join("");
     case "failed":
-      return `🏚 ${pipelineUrl} build failed in ${duration}\n`;
+      return [
+        `💥 Flight test ${pipelineUrl} crashed after ${duration}\n`,
+        `Carrier *${projectName}*\n`,
+        `Captain *${username}*\n`,
+        `Journey *${ref}*\n`,
+      ].join("");
     case "running":
       return [
-        `🏗 ${pipelineUrl} building for *${ref}*\n`,
-        `Project *${projectName}*\n`,
-        `Issuer *${username}*\n`,
+        `🛫 Flight test ${pipelineUrl} is taking off\n`,
+        `Carrier *${projectName}*\n`,
+        `Captain *${username}*\n`,
+        `Journey *${ref}*\n`,
       ].join("");
 
     case "pending":
@@ -100,7 +110,7 @@ function getMessageOnPipeline(body: NowRequestBody) {
 }
 
 function getMessageOnComment(body: NowRequestBody) {
-  const { object_attributes, project, user } = body;
+  const { object_attributes, project, user, merge_request } = body;
 
   const username = escapeContent(user.name);
   const projectName = escapeContent(project.name);
@@ -110,7 +120,7 @@ function getMessageOnComment(body: NowRequestBody) {
       // We only want to trigger on Overview comments, not on Changes
       if (!object_attributes.type) {
         return [
-          `💬 *${username}* comments on [${projectName}](${object_attributes.url})\n`,
+          `💬 *${username}* comments on [\\#${merge_request.iid} ${projectName}](${object_attributes.url})\n`,
           `\n`,
           `_${escapeContent(object_attributes.note)}_`,
         ].join("");
