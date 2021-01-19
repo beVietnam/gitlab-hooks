@@ -42,7 +42,7 @@ function getMessageOnMergeRequest(body: NowRequestBody) {
 
   switch (object_attributes.action) {
     case "merge":
-      return `🆒 *${username}* will be the captain for ${mergeRequestLink}\n`;
+      return `🆒 Applied the upgrade ${mergeRequestLink}\n`;
     case "approved":
       return `🆗 *${username}* agreed the ${mergeRequestLink} upgrade\n`;
     case "reopen":
@@ -120,7 +120,7 @@ function getMessageOnComment(body: NowRequestBody) {
       // We only want to trigger on Overview comments, not on Changes
       if (!object_attributes.type) {
         return [
-          `💬 *${username}* comments on [\\#${merge_request.iid} ${projectName}](${object_attributes.url})\n`,
+          `💬 *${username}* commented on [\\#${merge_request.iid} ${projectName}](${object_attributes.url})\n`,
           `\n`,
           `_${escapeContent(object_attributes.note)}_`,
         ].join("");
@@ -170,8 +170,6 @@ export default async (request: NowRequest, response: NowResponse) => {
   const event = request.headers["x-gitlab-event"];
 
   const text = getBodyText(event, request.body);
-
-  console.log({ text });
 
   // Right now doesn’t support others event
   if (text.length === 0) {
