@@ -1,6 +1,6 @@
-# GitLab Webhooks
+# GitLab Webhook
 
-This is the custom webhooks for GitLab, which connects to Telegram through a bot.
+A custom GitLab webhook, connected to Telegram through a bot.
 
 ## Usage
 
