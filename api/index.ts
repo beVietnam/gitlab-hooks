@@ -7,6 +7,7 @@ const GitlabEvents = {
   Merge: "Merge Request Hook",
   Pipeline: "Pipeline Hook",
   Comment: "Note Hook",
+  Issue: "Issue Hook",
 };
 
 function secondsToMinutes(seconds: number) {
@@ -135,6 +136,34 @@ function getMessageOnComment(body: NowRequestBody) {
   }
 }
 
+function getMessageOnIssue(body: NowRequestBody) {
+  const { user, object_attributes, project } = body;
+
+  const username = escapeContent(user.name);
+  const projectName = escapeContent(project.name);
+  const title = escapeContent(object_attributes.title);
+
+  switch (object_attributes.action) {
+    case "open":
+      return [
+        `⚠️ *${username}* has opened an issue on *${projectName}*\n`,
+        `\n`,
+        `*[\\#${object_attributes.iid} ${title}](${object_attributes.url})*`,
+        `\n`,
+        `${escapeContent(object_attributes.description)}`,
+      ].join("");
+    case "close":
+      return [
+        `🚮 *${username}* has closed an issue on *${projectName}*\n`,
+        `\n`,
+        `*[\\#${object_attributes.iid} ${title}](${object_attributes.url})*`,
+      ].join("");
+    case "update":
+    default:
+      return ``;
+  }
+}
+
 function getBodyText(event: string | string[], body: NowRequestBody) {
   switch (event) {
     case GitlabEvents.Merge:
@@ -143,6 +172,8 @@ function getBodyText(event: string | string[], body: NowRequestBody) {
       return getMessageOnPipeline(body);
     case GitlabEvents.Comment:
       return getMessageOnComment(body);
+    case GitlabEvents.Issue:
+      return getMessageOnIssue(body);
     default:
       return ``;
   }
@@ -155,7 +186,7 @@ export default async (request: NowRequest, response: NowResponse) => {
     });
   }
 
-  // If you specify a secret token, it is sent with the hook request in the X-Gitlab-Token HTTP header.
+  // If you specify a secret token, it will be sent with the hook request in the X-Gitlab-Token HTTP header.
   // Your webhook endpoint can check that to verify that the request is legitimate.
   if (process.env.GITLAB_SECRET_TOKEN) {
     const token = request.headers["x-gitlab-token"];
